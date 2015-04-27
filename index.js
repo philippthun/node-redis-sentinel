@@ -31,18 +31,17 @@ Sentinel.prototype.createClient = function(masterName, opts) {
         var pubsubOpts = {};
         pubsubOpts.role = "sentinel";
         pubsubClient = this.createClientInternal(masterName, pubsubOpts);
-        pubsubClient.subscribe("+switch-master", function(error) {
-            if (error) {
-                console.error("Unable to subscribe to Sentinel PUBSUB",
-                              host, ":", port);
-            }
-        });
+        pubsubClient.subscribe("+switch-master");
         pubsubClient.on("message", function(channel, message) {
             console.warn("Received +switch-master message from Redis Sentinel.",
                          " Reconnecting clients.");
             self.reconnectAllClients();
         });
-        pubsubClient.on("error", function(error) {});
+        pubsubClient.on("error", function(error) {
+            if (error) {
+                console.error("PubSub client has an error: " + error);
+            }
+        });
         self.pubsub.push(pubsubClient);
     }
     return this.createClientInternal(masterName, opts);
